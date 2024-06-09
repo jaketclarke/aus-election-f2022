@@ -1,0 +1,6 @@
+.env
+output/
+input/
+working/
+__pycache__
+*.xlsx
