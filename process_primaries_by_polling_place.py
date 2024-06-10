@@ -47,9 +47,7 @@ df_primary["TotalVotes"] = df_primary.groupby("PollingPlaceID")[
     "OrdinaryVotes"
 ].transform("sum")
 
-
 df_formal = df_formal[["PollingPlaceID", "CandidateID", "TotalFormalVotes"]]
-print(df_formal)
 
 # merge results
 df_primary_results = pd.merge(
@@ -170,5 +168,3 @@ df_pc_total = df_pc_total.round(4)
 df_pc_total.to_csv(
     f"{OUTPUT_DIRECTORY}{os.sep}f2022_fp_by_polling_place_pc_total.csv", encoding="UTF8"
 )
-
-print(df_pc_formal)
