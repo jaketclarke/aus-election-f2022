@@ -66,7 +66,7 @@ df_sa1.rename(
         "div_nm": "DivisionNm",
         "pp_id": "PollingPlaceID",
         "pp_nm": "PollingPlace",
-        "ccd_id": "SA1_2021",
+        "ccd_id": "SA1_2016",
         "votes": "SA1_Total_Votes",
     },
     inplace=True,
@@ -80,7 +80,7 @@ df_sa1["Lookup"] = df_sa1.apply(
     axis=1,
 )
 df_sa1.insert(2, "Lookup", df_sa1.pop("Lookup"))
-df_sa1 = df_sa1.sort_values(["DivisionNm", "SA1_2021", "Lookup"])
+df_sa1 = df_sa1.sort_values(["DivisionNm", "SA1_2016", "Lookup"])
 # df_sa1.to_csv("sa1.csv", index=False)
 print(df_sa1)
 
@@ -116,18 +116,18 @@ for column in vote_columns:
 print(df_sa1_with_vote_data)
 # group by sa1
 
-# Group by 'SA1_2021' and calculate the sum of each specified column
+# Group by 'SA1_2016' and calculate the sum of each specified column
 
-df_sa1_grouped = df_sa1_with_vote_data.groupby(by="SA1_2021")[vote_columns].sum()
+df_sa1_grouped = df_sa1_with_vote_data.groupby(by="SA1_2016")[vote_columns].sum()
 # df_sa1_grouped.to_csv("df_sa1_with_vote_data_multiplied_grouped.csv")
 
 df_sa1_totals = (
-    df_sa1_with_vote_data.groupby(by="SA1_2021")["SA1_Total_Votes"].sum().reset_index()
+    df_sa1_with_vote_data.groupby(by="SA1_2016")["SA1_Total_Votes"].sum().reset_index()
 )
 print(df_sa1_totals)
 
 df_output = pd.merge(
-    left=df_sa1_grouped, right=df_sa1_totals, on="SA1_2021", how="left"
+    left=df_sa1_grouped, right=df_sa1_totals, on="SA1_2016", how="left"
 )
 
 
@@ -138,5 +138,5 @@ df_other_data.rename(columns={"SA1_Total_Votes": "fp_tot_f2022"}, inplace=True)
 
 print(df_output)
 df_output.to_csv(
-    f"{OUTPUT_DIRECTORY}{os.sep}f2022_fp_by_sa1_2021.csv", encoding="UTF8", index=False
+    f"{OUTPUT_DIRECTORY}{os.sep}f2022_fp_by_SA1_2016.csv", encoding="UTF8", index=False
 )

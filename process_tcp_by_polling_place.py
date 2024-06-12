@@ -98,7 +98,7 @@ df_pc_total = df_merge.pivot_table(
 
 df_pc_total.columns = [
     (
-        f"fp_{col.lower()}_f2022_pc_tot"
+        f"tcp_{col.lower()}_f2022_pc_tot"
         if col != ("DivisionNm", "") and col != ("PollingPlaceID", "")
         else col
     )
@@ -151,7 +151,7 @@ df_primary_results_totals = df_primary_results_totals.drop_duplicates()
 
 # todo add , "TotalFormalVotes": "fp_f2022_tot_formal" below if primary
 df_primary_results_totals.rename(
-    columns={"TotalVotes": "fp_f2022_tot"},
+    columns={"TotalVotes": "tcp_f2022_tot"},
     inplace=True,
 )
 

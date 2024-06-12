@@ -40,6 +40,22 @@ merged_data.to_csv(PRIMARY_DATA_FILEPATH, index=False)
 url = "https://results.aec.gov.au/27966/Website/Downloads/HouseFirstPrefsByCandidateByVoteTypeDownload-27966.csv"
 get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
 
+# get tcp by pp
+url = "https://results.aec.gov.au/27966/Website/Downloads/HouseTcpByCandidateByPollingPlaceDownload-27966.csv"
+get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
+
+# get tcp by vote type
+url = "https://results.aec.gov.au/27966/Website/Downloads/HouseTcpByCandidateByVoteTypeDownload-27966.csv"
+get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
+
+# get tpp by pp
+url = "https://results.aec.gov.au/27966/Website/Downloads/HouseTppByPollingPlaceDownload-27966.csv"
+get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
+
+# get tpp by vote type
+url = "https://results.aec.gov.au/27966/Website/Downloads/HouseTppByDivisionByVoteTypeDownload-27966.csv"
+get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
+
 # get SA1 data
 url = "https://www.aec.gov.au/Elections/federal_elections/2022/files/downloads/2022-federal-election-votes-sa1.csv"
 get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
