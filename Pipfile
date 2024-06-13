@@ -8,6 +8,9 @@ pandas = "*"
 requests = "*"
 python-dotenv = "*"
 openpyxl = "*"
+geopandas = "*"
+pyproj = "*"
+shapely = "*"
 
 [dev-packages]
 pre-commit = "*"
