@@ -43,7 +43,7 @@ def get_file_from_url(url: str, output_directory: str) -> None:
 
     # save file
     try:
-        open(f"{output_directory}{os.sep}{filename}", "wb").write(r.content)
+        open(f"{output_directory}{os.sep}{filename}", mode="wb").write(r.content)
     except RuntimeError as e:
         raise RuntimeError(f"Could not save file {filename} from url {url}, {e}") from e
 
