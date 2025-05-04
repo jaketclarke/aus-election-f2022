@@ -85,7 +85,7 @@ def process_primaries():
     ]
 
     # Define the index for the pivot table (location identifiers)
-    pivot_index = [
+    group_by_keys = [
         "StateAb",
         "DivisionID",
         "DivisionNm",
@@ -93,9 +93,23 @@ def process_primaries():
         "PollingPlace",
     ]
 
+    # Calculate total_formal_votes per location
+    total_formal_votes_df = (
+        primaryData.groupby(group_by_keys)["Total Formal Primary Votes"]
+        .sum()
+        .reset_index(name="total_formal_votes")
+    )
+
+    # Calculate total_votes per location
+    total_votes_df = (
+        primaryData.groupby(group_by_keys)["Total Primary Votes"]
+        .sum()
+        .reset_index(name="total_votes")
+    )
+
     # Perform the pivot operation
     pivot_df = primaryData.pivot_table(
-        index=pivot_index, columns="PartyAb", values=fields_to_pivot, aggfunc="sum"
+        index=group_by_keys, columns="PartyAb", values=fields_to_pivot, aggfunc="sum"
     )
 
     # Create new single-level column names
@@ -113,6 +127,10 @@ def process_primaries():
 
     # this will make it output a regular spreadsheet
     pivot_df.reset_index(inplace=True)
+
+    # add totals
+    pivot_df = pd.merge(pivot_df, total_formal_votes_df, on=group_by_keys, how="left")
+    pivot_df = pd.merge(pivot_df, total_votes_df, on=group_by_keys, how="left")
 
     primaryDataOutputFileNamePivoted = (
         f"{ELECTION_CODE}_primaries_with_proportions_pivot.csv"
