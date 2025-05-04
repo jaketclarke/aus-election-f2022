@@ -1,0 +1,76 @@
+import os
+import logging
+from dotenv import load_dotenv
+from helpers import ensure_env_var_exists
+import pandas as pd
+import numpy as np
+
+# settings
+INPUT_DIRECTORY = "input"
+WORKING_DIRECTORY = "working"
+
+# load env vars
+load_dotenv()
+
+# logging
+logging.basicConfig()
+DEBUG_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+ELECTION_CODE = ensure_env_var_exists("ELECTION_CODE")
+
+print(f"debug level: {DEBUG_LEVEL}, running for election {ELECTION_CODE}")
+logging.basicConfig(level=DEBUG_LEVEL.upper())
+
+
+def process_primaries():
+
+    # add proportions to primary data
+    primaryDataFileName = f"{ELECTION_CODE}_primaries.csv"
+    primaryDataPath = f"{WORKING_DIRECTORY}{os.sep}{primaryDataFileName}"
+    primaryData = pd.read_csv(primaryDataPath)
+
+    # work out total column
+    # joint booths have different PollingPlaceIDs
+    primaryTotal = (
+        primaryData.groupby(["PollingPlaceID"])
+        .sum()["OrdinaryVotes"]
+        .reset_index("PollingPlaceID")
+    )
+    primaryTotal.rename({"OrdinaryVotes": "Total Primary Votes"}, axis=1, inplace=True)
+
+    primaryData = primaryData.merge(primaryTotal, on="PollingPlaceID")
+
+    # work out total formal
+    primaryDataFormal = primaryData[primaryData.PartyNm != "Informal"]
+    primaryTotalFormal = (
+        primaryDataFormal.groupby(["PollingPlaceID"])
+        .sum()["OrdinaryVotes"]
+        .reset_index("PollingPlaceID")
+    )
+    primaryTotalFormal.rename(
+        {"OrdinaryVotes": "Total Formal Primary Votes"}, axis=1, inplace=True
+    )
+
+    primaryData = primaryData.merge(primaryTotalFormal, on="PollingPlaceID")
+
+    # Proportions calc
+    primaryData["OrdinaryVotesPcTotal"] = primaryData["OrdinaryVotes"].div(
+        primaryData["Total Primary Votes"].values
+    )
+    primaryData["OrdinaryVotesPcFormalTotal"] = primaryData["OrdinaryVotes"].div(
+        primaryData["Total Formal Primary Votes"].values
+    )
+
+    # What we want is informal as % total, votes % total formal
+    primaryData["OrdinaryVotesPc"] = np.where(
+        primaryData["PartyNm"] == "Informal",
+        primaryData["OrdinaryVotes"] / primaryData["Total Primary Votes"],
+        primaryData["OrdinaryVotes"] / primaryData["Total Formal Primary Votes"],
+    )
+
+    # output this file
+    primaryDataOutputFileName = f"{ELECTION_CODE}_primaries_with_proportions.csv"
+    primaryDataOutputPath = f"{WORKING_DIRECTORY}{os.sep}{primaryDataOutputFileName}"
+    primaryData.to_csv(primaryDataOutputPath, index=False)
+
+
+process_primaries()
