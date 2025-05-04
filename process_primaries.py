@@ -72,5 +72,55 @@ def process_primaries():
     primaryDataOutputPath = f"{WORKING_DIRECTORY}{os.sep}{primaryDataOutputFileName}"
     primaryData.to_csv(primaryDataOutputPath, index=False)
 
+    # pivot data
+    # List of base fields to pivot
+    fields_to_pivot = [
+        "OrdinaryVotes",
+        "Swing",
+        "Total Primary Votes",
+        "Total Formal Primary Votes",
+        "OrdinaryVotesPcTotal",
+        "OrdinaryVotesPcFormalTotal",
+        "OrdinaryVotesPc",
+    ]
+
+    # Define the index for the pivot table (location identifiers)
+    pivot_index = [
+        "StateAb",
+        "DivisionID",
+        "DivisionNm",
+        "PollingPlaceID",
+        "PollingPlace",
+    ]
+
+    # Perform the pivot operation
+    pivot_df = primaryData.pivot_table(
+        index=pivot_index, columns="PartyAb", values=fields_to_pivot, aggfunc="sum"
+    )
+
+    # Create new single-level column names
+    new_columns = []
+    for col in pivot_df.columns:
+        if col[1] == "":  # For the index columns (after reset_index)
+            value = col[0].replace(" ", "_").lower()
+            new_columns.append(value)
+        else:
+            new_col_name = f"{col[1]}_{col[0]}".replace(" ", "_").lower()
+            new_columns.append(new_col_name)
+
+    # Assign the new column names
+    pivot_df.columns = new_columns
+
+    # this will make it output a regular spreadsheet
+    pivot_df.reset_index(inplace=True)
+
+    primaryDataOutputFileNamePivoted = (
+        f"{ELECTION_CODE}_primaries_with_proportions_pivot.csv"
+    )
+    primaryDataOutputPathPivoted = (
+        f"{WORKING_DIRECTORY}{os.sep}{primaryDataOutputFileNamePivoted}"
+    )
+    pivot_df.to_csv(primaryDataOutputPathPivoted, index=False)
+
 
 process_primaries()
