@@ -24,7 +24,7 @@ logging.basicConfig(
 )
 
 # add proportions to primary data
-primaryDataFileName = f"{ELECTION_CODE}_primaries.csv"
+primaryDataFileName = f"HouseStateFirstPrefsByPollingPlaceDownload-{ELECTION_CODE}-merged.csv"
 primaryDataPath = f"{WORKING_DIRECTORY}{os.sep}{primaryDataFileName}"
 primaryData = pd.read_csv(primaryDataPath)
 
