@@ -55,18 +55,18 @@ merged_data.to_csv(
     f"{WORKING_DIRECTORY}{os.sep}HouseStateFirstPrefsByPollingPlaceDownload-{ELECTION_CODE}-merged.csv", index=False
 )
 
-# # get tcp by pp
-# URL = f"https://results.aec.gov.au/{ELECTION_CODE}/Website/Downloads/HouseTcpByCandidateByPollingPlaceDownload-{ELECTION_CODE}.csv"
-# get_file_from_url(url=URL, output_directory=INPUT_DIRECTORY)
+# get tcp by pp
+URL = f"{BASE_URL}Downloads/HouseTcpByCandidateByPollingPlaceDownload-{ELECTION_CODE}.csv"
+get_file_from_url(url=URL, output_directory=INPUT_DIRECTORY)
 
-# # get tcp by vote type
-# url = "https://results.aec.gov.au/27966/Website/Downloads/HouseTcpByCandidateByVoteTypeDownload-27966.csv"
-# get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
+# get tcp by vote type
+URL = f"{BASE_URL}Downloads/HouseTcpByCandidateByVoteTypeDownload-{ELECTION_CODE}.csv"
+get_file_from_url(url=URL, output_directory=INPUT_DIRECTORY)
 
-# # get tpp by pp
-# url = "https://results.aec.gov.au/27966/Website/Downloads/HouseTppByPollingPlaceDownload-27966.csv"
-# get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
+# get tpp by pp
+URL = f"{BASE_URL}Downloads/HouseTppByPollingPlaceDownload-{ELECTION_CODE}.csv"
+get_file_from_url(url=URL, output_directory=INPUT_DIRECTORY)
 
-# # get tpp by vote type
-# url = "https://results.aec.gov.au/27966/Website/Downloads/HouseTppByDivisionByVoteTypeDownload-27966.csv"
-# get_file_from_url(url=url, output_directory=INPUT_DIRECTORY)
+# get tpp by vote type
+URL = f"{BASE_URL}Downloads/HouseTppByDivisionByVoteTypeDownload-{ELECTION_CODE}.csv"
+get_file_from_url(url=URL, output_directory=INPUT_DIRECTORY)
