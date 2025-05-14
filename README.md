@@ -4,22 +4,23 @@ Python code to scrape AEC election results
 
 ## Getting started
 
-Assumes a working environment with python and pipenv.
+* Assumes a working environment with python and pipenv.
 
-Create a virtual environment with:
+* Create a copy of .env.template
 
-```sh
-pipenv install
-```
+  * `cp .env.template.env`
+  * Update the values per the instructions in the template
 
-And run a script like:
+* Create a virtual environment with:
 
-```sh
-pipenv run python get_primaries.py
-```
+  * `pipenv install`
+
+* And run a script like:
+
+  * `pipenv run python get_house_data.py`
 
 ## Scripts
 
-### get_primaries.py
+### get_house_data.py
 
-Gets primary vote files for a given election
+Gets house results of various types for a given election

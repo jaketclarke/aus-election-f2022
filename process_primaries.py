@@ -18,127 +18,124 @@ DEBUG_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 ELECTION_CODE = ensure_env_var_exists("ELECTION_CODE")
 
 print(f"debug level: {DEBUG_LEVEL}, running for election {ELECTION_CODE}")
-logging.basicConfig(level=DEBUG_LEVEL.upper())
+logging.basicConfig(
+    level=DEBUG_LEVEL.upper(),
+    handlers=[logging.StreamHandler()],
+)
 
+# add proportions to primary data
+primaryDataFileName = f"{ELECTION_CODE}_primaries.csv"
+primaryDataPath = f"{WORKING_DIRECTORY}{os.sep}{primaryDataFileName}"
+primaryData = pd.read_csv(primaryDataPath)
 
-def process_primaries():
+# work out total column
+# joint booths have different PollingPlaceIDs
+primaryTotal = (
+    primaryData.groupby(["PollingPlaceID"])
+    .sum()["OrdinaryVotes"]
+    .reset_index("PollingPlaceID")
+)
+primaryTotal.rename({"OrdinaryVotes": "Total Primary Votes"}, axis=1, inplace=True)
 
-    # add proportions to primary data
-    primaryDataFileName = f"{ELECTION_CODE}_primaries.csv"
-    primaryDataPath = f"{WORKING_DIRECTORY}{os.sep}{primaryDataFileName}"
-    primaryData = pd.read_csv(primaryDataPath)
+primaryData = primaryData.merge(primaryTotal, on="PollingPlaceID")
 
-    # work out total column
-    # joint booths have different PollingPlaceIDs
-    primaryTotal = (
-        primaryData.groupby(["PollingPlaceID"])
-        .sum()["OrdinaryVotes"]
-        .reset_index("PollingPlaceID")
-    )
-    primaryTotal.rename({"OrdinaryVotes": "Total Primary Votes"}, axis=1, inplace=True)
+# work out total formal
+primaryDataFormal = primaryData[primaryData.PartyNm != "Informal"]
+primaryTotalFormal = (
+    primaryDataFormal.groupby(["PollingPlaceID"])
+    .sum()["OrdinaryVotes"]
+    .reset_index("PollingPlaceID")
+)
+primaryTotalFormal.rename(
+    {"OrdinaryVotes": "Total Formal Primary Votes"}, axis=1, inplace=True
+)
 
-    primaryData = primaryData.merge(primaryTotal, on="PollingPlaceID")
+primaryData = primaryData.merge(primaryTotalFormal, on="PollingPlaceID")
 
-    # work out total formal
-    primaryDataFormal = primaryData[primaryData.PartyNm != "Informal"]
-    primaryTotalFormal = (
-        primaryDataFormal.groupby(["PollingPlaceID"])
-        .sum()["OrdinaryVotes"]
-        .reset_index("PollingPlaceID")
-    )
-    primaryTotalFormal.rename(
-        {"OrdinaryVotes": "Total Formal Primary Votes"}, axis=1, inplace=True
-    )
+# Proportions calc
+primaryData["OrdinaryVotesPcTotal"] = primaryData["OrdinaryVotes"].div(
+    primaryData["Total Primary Votes"].values
+)
+primaryData["OrdinaryVotesPcFormalTotal"] = primaryData["OrdinaryVotes"].div(
+    primaryData["Total Formal Primary Votes"].values
+)
 
-    primaryData = primaryData.merge(primaryTotalFormal, on="PollingPlaceID")
+# What we want is informal as % total, votes % total formal
+primaryData["OrdinaryVotesPc"] = np.where(
+    primaryData["PartyNm"] == "Informal",
+    primaryData["OrdinaryVotes"] / primaryData["Total Primary Votes"],
+    primaryData["OrdinaryVotes"] / primaryData["Total Formal Primary Votes"],
+)
 
-    # Proportions calc
-    primaryData["OrdinaryVotesPcTotal"] = primaryData["OrdinaryVotes"].div(
-        primaryData["Total Primary Votes"].values
-    )
-    primaryData["OrdinaryVotesPcFormalTotal"] = primaryData["OrdinaryVotes"].div(
-        primaryData["Total Formal Primary Votes"].values
-    )
+# output this file
+primaryDataOutputFileName = f"{ELECTION_CODE}_primaries_with_proportions.csv"
+primaryDataOutputPath = f"{WORKING_DIRECTORY}{os.sep}{primaryDataOutputFileName}"
+primaryData.to_csv(primaryDataOutputPath, index=False)
 
-    # What we want is informal as % total, votes % total formal
-    primaryData["OrdinaryVotesPc"] = np.where(
-        primaryData["PartyNm"] == "Informal",
-        primaryData["OrdinaryVotes"] / primaryData["Total Primary Votes"],
-        primaryData["OrdinaryVotes"] / primaryData["Total Formal Primary Votes"],
-    )
+# pivot data
+# List of base fields to pivot
+fields_to_pivot = [
+    "OrdinaryVotes",
+    "Swing",
+    "Total Primary Votes",
+    "Total Formal Primary Votes",
+    "OrdinaryVotesPcTotal",
+    "OrdinaryVotesPcFormalTotal",
+    "OrdinaryVotesPc",
+]
 
-    # output this file
-    primaryDataOutputFileName = f"{ELECTION_CODE}_primaries_with_proportions.csv"
-    primaryDataOutputPath = f"{WORKING_DIRECTORY}{os.sep}{primaryDataOutputFileName}"
-    primaryData.to_csv(primaryDataOutputPath, index=False)
+# Define the index for the pivot table (location identifiers)
+group_by_keys = [
+    "StateAb",
+    "DivisionID",
+    "DivisionNm",
+    "PollingPlaceID",
+    "PollingPlace",
+]
 
-    # pivot data
-    # List of base fields to pivot
-    fields_to_pivot = [
-        "OrdinaryVotes",
-        "Swing",
-        "Total Primary Votes",
-        "Total Formal Primary Votes",
-        "OrdinaryVotesPcTotal",
-        "OrdinaryVotesPcFormalTotal",
-        "OrdinaryVotesPc",
-    ]
+# Calculate total_formal_votes per location
+total_formal_votes_df = (
+    primaryData.groupby(group_by_keys)["Total Formal Primary Votes"]
+    .sum()
+    .reset_index(name="total_formal_votes")
+)
 
-    # Define the index for the pivot table (location identifiers)
-    group_by_keys = [
-        "StateAb",
-        "DivisionID",
-        "DivisionNm",
-        "PollingPlaceID",
-        "PollingPlace",
-    ]
+# Calculate total_votes per location
+total_votes_df = (
+    primaryData.groupby(group_by_keys)["Total Primary Votes"]
+    .sum()
+    .reset_index(name="total_votes")
+)
 
-    # Calculate total_formal_votes per location
-    total_formal_votes_df = (
-        primaryData.groupby(group_by_keys)["Total Formal Primary Votes"]
-        .sum()
-        .reset_index(name="total_formal_votes")
-    )
+# Perform the pivot operation
+pivot_df = primaryData.pivot_table(
+    index=group_by_keys, columns="PartyAb", values=fields_to_pivot, aggfunc="sum"
+)
 
-    # Calculate total_votes per location
-    total_votes_df = (
-        primaryData.groupby(group_by_keys)["Total Primary Votes"]
-        .sum()
-        .reset_index(name="total_votes")
-    )
+# Create new single-level column names
+new_columns = []
+for col in pivot_df.columns:
+    if col[1] == "":  # For the index columns (after reset_index)
+        value = col[0].replace(" ", "_").lower()
+        new_columns.append(value)
+    else:
+        new_col_name = f"{col[1]}_{col[0]}".replace(" ", "_").lower()
+        new_columns.append(new_col_name)
 
-    # Perform the pivot operation
-    pivot_df = primaryData.pivot_table(
-        index=group_by_keys, columns="PartyAb", values=fields_to_pivot, aggfunc="sum"
-    )
+# Assign the new column names
+pivot_df.columns = new_columns
 
-    # Create new single-level column names
-    new_columns = []
-    for col in pivot_df.columns:
-        if col[1] == "":  # For the index columns (after reset_index)
-            value = col[0].replace(" ", "_").lower()
-            new_columns.append(value)
-        else:
-            new_col_name = f"{col[1]}_{col[0]}".replace(" ", "_").lower()
-            new_columns.append(new_col_name)
+# this will make it output a regular spreadsheet
+pivot_df.reset_index(inplace=True)
 
-    # Assign the new column names
-    pivot_df.columns = new_columns
+# add totals
+pivot_df = pd.merge(pivot_df, total_formal_votes_df, on=group_by_keys, how="left")
+pivot_df = pd.merge(pivot_df, total_votes_df, on=group_by_keys, how="left")
 
-    # this will make it output a regular spreadsheet
-    pivot_df.reset_index(inplace=True)
-
-    # add totals
-    pivot_df = pd.merge(pivot_df, total_formal_votes_df, on=group_by_keys, how="left")
-    pivot_df = pd.merge(pivot_df, total_votes_df, on=group_by_keys, how="left")
-
-    primaryDataOutputFileNamePivoted = (
-        f"{ELECTION_CODE}_primaries_with_proportions_pivot.csv"
-    )
-    primaryDataOutputPathPivoted = (
-        f"{WORKING_DIRECTORY}{os.sep}{primaryDataOutputFileNamePivoted}"
-    )
-    pivot_df.to_csv(primaryDataOutputPathPivoted, index=False)
-
-
-process_primaries()
+primaryDataOutputFileNamePivoted = (
+    f"{ELECTION_CODE}_primaries_with_proportions_pivot.csv"
+)
+primaryDataOutputPathPivoted = (
+    f"{WORKING_DIRECTORY}{os.sep}{primaryDataOutputFileNamePivoted}"
+)
+pivot_df.to_csv(primaryDataOutputPathPivoted, index=False)
