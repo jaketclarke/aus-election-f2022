@@ -171,3 +171,25 @@ def merge_csv_files(directory: str, pattern: str = None) -> pd.DataFrame:
     merged_df = pd.concat(dfs, ignore_index=True)
 
     return merged_df
+
+
+def ensure_env_var_exists(env_var: str) -> str:
+    """
+    Takes key for an env var.
+    Raise an exception if it doesn't exist, otherwise return it
+
+    Args:
+        env_var (str): key for env var, e.g. LOGGING_LEVEL
+
+    Raises:
+        ValueError: will raise if LOGGING_LEVEL doesn't exist
+
+    Returns:
+        str: the value of the environment variable
+    """
+    value = os.getenv(str.upper(env_var))
+    if value is None:
+        logging.error("environment variable %s not set", env_var)
+        raise ValueError(f"environment variable {env_var} not set")
+
+    return value
