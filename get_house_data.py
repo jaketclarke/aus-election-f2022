@@ -13,6 +13,7 @@ from helpers import (
 # settings
 INPUT_DIRECTORY = "input"
 WORKING_DIRECTORY = "working"
+OUTPUT_DIRECTORY = "output"
 
 # load env vars
 load_dotenv()
@@ -40,6 +41,7 @@ else:
 # make sure g2g
 destroy_and_remake_directory(INPUT_DIRECTORY)
 destroy_and_remake_directory(WORKING_DIRECTORY)
+destroy_and_remake_directory(OUTPUT_DIRECTORY)
 
 # get primary results
 STATES_TERRITORIES = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"]
@@ -54,6 +56,10 @@ merged_data = merge_csv_files(INPUT_DIRECTORY, "HouseStateFirstPrefs")
 merged_data.to_csv(
     f"{WORKING_DIRECTORY}{os.sep}HouseStateFirstPrefsByPollingPlaceDownload-{ELECTION_CODE}-merged.csv", index=False
 )
+
+# get primaries by vote type data
+URL = f"{BASE_URL}Downloads/HouseFirstPrefsByCandidateByVoteTypeDownload-{ELECTION_CODE}.csv"
+get_file_from_url(url=URL, output_directory=INPUT_DIRECTORY)
 
 # get tcp by pp
 URL = f"{BASE_URL}Downloads/HouseTcpByCandidateByPollingPlaceDownload-{ELECTION_CODE}.csv"
